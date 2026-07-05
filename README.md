@@ -48,17 +48,13 @@ _DATA_2/
 **步骤一：生成小波与傅里叶域图像**
 
 ```bash
-python preprocess_dataset.py \
-    --input-dir "D:/data/_DATA_2" \
-    --output-dir "D:/data/_DATA_2"
+python preprocess_dataset.py --original_root "D:/data/_DATA_2" --output_root "D:/data/_DATA_2"
 ```
 
 如需处理 LCM-LoRA 生成的额外样本：
 
 ```bash
-python preprocess_dataset.py \
-    --original_root ../_DATA_4_32 \
-    --output_root ../_DATA_4_32/processed
+python preprocess_dataset.py --original_root ../_DATA_4_32 --output_root ../_DATA_4_32/processed
 ```
 
 ---
