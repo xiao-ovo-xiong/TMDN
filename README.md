@@ -16,19 +16,19 @@ TMDN/
 ├── my_dataset.py                     # 单域数据集加载
 ├── image_preprocessor.py             # 小波/傅里叶变换图像生成
 ├── preprocess_dataset.py             # 数据集预处理入口
-├── utils.py                          # 训练工具函数
-├── config.py                         # 模型配置
-├── class_indices.json                # 类别索引（训练后自动生成）
+├── utils.py                          
+├── config.py                         
+├── class_indices.json                # 类别索引（训练开始时自动生成）
 ├── convnext_small_1k_224_ema.pth     # ConvNeXt-Small 预训练权重
 └── swin_transformer/
     ├── train.py                      # Swin 侧训练脚本
     ├── predict.py                    # Swin 侧推理脚本
     ├── multimodal_swin.py            # 多域 Swin Transformer 子网络
     ├── model.py                      # Swin-Tiny 基础模型
-    ├── utils.py                      # Swin 侧工具函数
-    ├── my_dataset.py                 # Swin 侧数据集
+    ├── utils.py                      
+    ├── my_dataset.py                 
     ├── create_confusion_matrix.py    # 混淆矩阵生成
-    ├── select_incorrect_samples.py   # 错误样本筛选
+    ├── select_incorrect_samples.py   
     └── swin_tiny_patch4_window7_224.pth  # Swin-Tiny 预训练权重
 ```
 
@@ -39,7 +39,7 @@ TMDN/
 数据集目录结构如下：
 
 ```
-_DATA_2/
+_DATA/
 ├── original/train/{false,true}/      # 原始 RGB 图像
 ├── wavelet/train/{false,true}/       # 小波变换图像（预处理生成）
 └── fourier/train/{false,true}/       # 傅里叶幅度谱图像（预处理生成）
@@ -48,13 +48,13 @@ _DATA_2/
 **步骤一：生成小波与傅里叶域图像**
 
 ```bash
-python preprocess_dataset.py --original_root "D:/data/_DATA_2" --output_root "D:/data/_DATA_2"
+python preprocess_dataset.py --original_root "../_DATA" --output_root "../_DATA"
 ```
 
 如需处理 LCM-LoRA 生成的额外样本：
 
 ```bash
-python preprocess_dataset.py --original_root ../_DATA_4_32 --output_root ../_DATA_4_32/processed
+python preprocess_dataset.py --original_root ../_DATA_32 --output_root ../_DATA_32/processed
 ```
 
 ---
@@ -68,7 +68,7 @@ python preprocess_dataset.py --original_root ../_DATA_4_32 --output_root ../_DAT
 python train.py --use-twin
 
 # 加入 LCM-LoRA 生成式数据增强
-python train.py --use-twin --extra-train-dir ../_DATA_4_32/original
+python train.py --use-twin --extra-train-dir ../_DATA_32/original
 ```
 
 ### 2. 多域 ConvNeXt 子网络
@@ -87,14 +87,14 @@ python swin_transformer/train.py --use-multimodal
 
 ```bash
 # ConvNeXt 单域
-python train.py --data-path ../_DATA_2/original/train
-python train.py --data-path ../_DATA_2/wavelet/train
-python train.py --data-path ../_DATA_2/fourier/train
+python train.py --data-path ../_DATA/original/train
+python train.py --data-path ../_DATA/wavelet/train
+python train.py --data-path ../_DATA/fourier/train
 
 # Swin 单域
-python swin_transformer/train.py --data-path ../_DATA_2/original/train
-python swin_transformer/train.py --data-path ../_DATA_2/wavelet/train
-python swin_transformer/train.py --data-path ../_DATA_2/fourier/train
+python swin_transformer/train.py --data-path ../_DATA/original/train
+python swin_transformer/train.py --data-path ../_DATA/wavelet/train
+python swin_transformer/train.py --data-path ../_DATA/fourier/train
 ```
 
 ---
