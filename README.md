@@ -2,14 +2,6 @@
 
 ---
 
-## 环境依赖
-
-- Python 3.8
-- PyTorch 1.13.1
-- CUDA 11.7
-
----
-
 ## 目录结构
 
 ```
@@ -163,5 +155,5 @@ python swin_transformer/predict.py --modality fourier
 
 | 权重文件 | 来源 |
 |---|---|
-| `convnext_small_1k_224_ema.pth` | [ConvNeXt 官方](https://github.com/facebookresearch/ConvNeXt) |
+| `convnext_small_1k_224_ema.pth` | [ConvNeXt 官方](https://dl.fbaipublicfiles.com/convnext/convnext_small_1k_224_ema.pth) |
 | `swin_transformer/swin_tiny_patch4_window7_224.pth` | [Swin Transformer 官方](https://github.com/microsoft/Swin-Transformer) |
