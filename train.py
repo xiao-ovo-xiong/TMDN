@@ -4,9 +4,7 @@ import importlib
 import random
 import numpy as np
 
-# 强制确保根目录在 sys.path 最前面
 _root = os.path.dirname(os.path.abspath(__file__))
-# 移除所有 swin_transformer 相关路径，防止干扰
 sys.path = [p for p in sys.path if not p.endswith('swin_transformer')]
 if _root not in sys.path:
     sys.path.insert(0, _root)
@@ -24,7 +22,6 @@ from model import convnext_small as create_model
 from multimodal_convnext import MultiModalConvNeXt
 from twin_network import TwinNetwork
 
-# 显式从根目录 utils 导入，避免加载 swin_transformer/utils.py
 import importlib.util as _ilu
 _spec = _ilu.spec_from_file_location("root_utils", os.path.join(_root, "utils.py"))
 _root_utils = _ilu.module_from_spec(_spec)
@@ -94,7 +91,6 @@ def _inject_extra_train(train_paths: list, train_labels: list, extra_dir: str):
         label = name_to_idx[class_name]
         for fname in sorted(os.listdir(class_dir)):
             if os.path.splitext(fname)[1] in supported:
-                # 统一使用正斜杠，确保后续 replace('/original/', '/wavelet/') 能正确匹配
                 fpath = os.path.join(class_dir, fname).replace('\\', '/')
                 train_paths.append(fpath)
                 train_labels.append(label)
@@ -170,11 +166,6 @@ def main(args):
     data_transform = {
         "train": transforms.Compose([
             transforms.RandomResizedCrop(img_size),
-            # transforms.RandomHorizontalFlip(), # 禁用了水平翻转（原模型自带）
-            # transforms.RandomVerticalFlip(),  # 新增垂直翻转
-            # transforms.ColorJitter(0.4, 0.4, 0.4),  # 新增颜色抖动
-            # transforms.RandomRotation(15),  # 新增随机旋转
-            # transforms.RandomGrayscale(p=0.1),  # 新增随机灰度化
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
@@ -330,7 +321,6 @@ def main(args):
             pg = get_params_groups(model, weight_decay=args.wd)
             optimizer = optim.AdamW(pg, lr=args.lr, weight_decay=args.wd)
     else:
-        # pg = [p for p in model.parameters() if p.requires_grad]
         pg = get_params_groups(model, weight_decay=args.wd)
         optimizer = optim.AdamW(pg, lr=args.lr, weight_decay=args.wd)
     
@@ -343,7 +333,6 @@ def main(args):
                                    mode="max")
 
     best_acc = 0.
-    best_acc_epoch = -1  # 记录当前 best_model.pth 是哪一轮训练出来的
     for epoch in range(args.epochs):
         # train
         train_loss, train_acc = train_one_epoch(model=model,
@@ -381,17 +370,8 @@ def main(args):
             break
 
         if best_acc < val_acc:
-            # 开启历史权重保存时，先将旧的 best_model.pth 备份，名字带上它实际训练的轮次
-            if args.save_history_model and best_acc > 0.:
-                history_path = f"./weights/best_model_epoch{best_acc_epoch}.pth"
-                if os.path.exists("./weights/best_model.pth"):
-                    import shutil
-                    shutil.copy("./weights/best_model.pth", history_path)
-                    print(f"History model saved: {history_path} (acc={best_acc:.4f})")
-            save_path = "./weights/best_model.pth"
-            torch.save(model.state_dict(), save_path)
+            torch.save(model.state_dict(), "./weights/best_model.pth")
             best_acc = val_acc
-            best_acc_epoch = epoch
             print(f"Saved best model with accuracy: {best_acc:.4f}")
 
 
@@ -400,16 +380,12 @@ if __name__ == '__main__':
     parser.add_argument('--num_classes', type=int, default=2)
     parser.add_argument('--epochs', type=int, default=88)
     parser.add_argument('--batch-size', type=int, default=8)
-    parser.add_argument('--lr', type=float, default=5e-5) # 原始值为5e-4、1e-4
+    parser.add_argument('--lr', type=float, default=5e-5)
     parser.add_argument('--wd', type=float, default=5e-2)
 
-    # 数据集所在根目录
-    # https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
     parser.add_argument('--data-path', type=str,
                         default="../_DATA_2/original/train")
 
-    # 预训练权重路径，如果不想载入就设置为空字符
-    # 链接: https://pan.baidu.com/s/1aNqQW4n_RrUlWUBNlaJRHA  密码: i83t
     parser.add_argument('--weights', type=str, default='convnext_small_1k_224_ema.pth',
                         help='initial weights path')
     # 是否冻结head以外所有权重
@@ -417,7 +393,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='cuda:0',
                         help='device id (i.e. 0 or 0,1 or cpu)')
 
-    # 新增早停参数
+    # 早停参数
     parser.add_argument('--patience', type=int, default=50,
                         help='Early stopping patience')
     parser.add_argument('--delta', type=float, default=0.001,
@@ -432,7 +408,7 @@ if __name__ == '__main__':
     parser.add_argument('--shared-weights', action='store_true',
                         help='Share weights across the three feature extractors')
     parser.add_argument('--fusion-lr-multiplier', type=float, default=15.0,
-                        help='Learning rate multiplier for fusion weights (default: 5.0)')
+                        help='Learning rate multiplier for fusion weights')
     parser.add_argument('--depths', type=int, nargs='+', default=[3, 3, 27, 3],
                         help='ConvNeXt depths for each stage')
     parser.add_argument('--dims', type=int, nargs='+', default=[96, 192, 384, 768],
@@ -470,11 +446,6 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=None,
                         help='Random seed for reproducibility. Not set by default. '
                              'Use e.g. --seed 42 to enable.')
-    parser.add_argument('--save-history-model', action='store_true',
-                        help='每次刷新 best_model.pth 前，将旧权重另存为 '
-                             'best_model_epoch{N}.pth，N 为当前轮次。'
-                             '默认关闭，加上此参数即开启。')
-
     opt = parser.parse_args()
 
     main(opt)

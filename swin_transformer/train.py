@@ -171,7 +171,6 @@ def main(args):
     data_transform = {
         "train": transforms.Compose([
             transforms.RandomResizedCrop(img_size),
-            # transforms.RandomHorizontalFlip(), # 禁用了水平翻转（原模型自带）
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
@@ -308,7 +307,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_classes', type=int, default=2)
     parser.add_argument('--epochs', type=int, default=88)
     parser.add_argument('--batch-size', type=int, default=8)
-    parser.add_argument('--lr', type=float, default=5e-5) # 原始值为1e-4
+    parser.add_argument('--lr', type=float, default=5e-5)
     parser.add_argument('--data-path', type=str, default="../_DATA_2/original/train",
                         help='Data path for single-modal training')
     parser.add_argument('--modality', type=str, default='original',
@@ -329,7 +328,7 @@ if __name__ == '__main__':
     parser.add_argument('--fusion-type', type=str, default='weighted_sum',
                         choices=['weighted_sum', 'concat', 'attention'])
     parser.add_argument('--fusion-lr-multiplier', type=float, default=15.0,
-                        help='Learning rate multiplier for fusion weights (default: 10.0)')
+                        help='Learning rate multiplier for fusion weights')
     parser.add_argument('--data-root', type=str, default='../_DATA_2',
                         help='Root dir containing original/wavelet/fourier subdirs')
     parser.add_argument('--embed-dim', type=int, default=96)

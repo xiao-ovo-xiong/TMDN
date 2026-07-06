@@ -37,13 +37,11 @@ class MultiModalConvNeXt(nn.Module):
     ):
         super().__init__()
         
-        # 设置默认参数
         if depths is None:
             depths = [3, 3, 27, 3]
         if dims is None:
             dims = [96, 192, 384, 768]
         
-        # 保存配置参数
         self.num_classes = num_classes
         self.depths = depths
         self.dims = dims
@@ -51,32 +49,24 @@ class MultiModalConvNeXt(nn.Module):
         self.shared_weights = shared_weights
         self.drop_path_rate = drop_path_rate
         
-        # 特征维度为最后一个stage的通道数
         self.feature_dim = dims[-1]
         
-        # 创建特征提取器
         if shared_weights:
-            # 共享权重：三个提取器使用同一个ConvNeXt实例
             base_extractor = self._create_feature_extractor(depths, dims, drop_path_rate)
             self.extractor_original = base_extractor
             self.extractor_wavelet = base_extractor
             self.extractor_fourier = base_extractor
         else:
-            # 独立权重：创建三个独立的ConvNeXt实例
             self.extractor_original = self._create_feature_extractor(depths, dims, drop_path_rate)
             self.extractor_wavelet = self._create_feature_extractor(depths, dims, drop_path_rate)
             self.extractor_fourier = self._create_feature_extractor(depths, dims, drop_path_rate)
         
-        # 创建特征融合模块
-        # feature_dim 由 ConvNeXt 架构的最后一个 stage 的通道数决定（dims[-1]）
         self.fusion_module = FusionModule(
             feature_dim=self.feature_dim,
             fusion_type=fusion_type,
-            learnable=True  # 默认使用可学习的权重
+            learnable=True
         )
         
-        # 创建分类头
-        # 输入维度为融合后的特征维度，输出维度为类别数
         self.classifier = nn.Linear(self.feature_dim, num_classes)
     
     def _create_feature_extractor(self, depths: list, dims: list, drop_path_rate: float) -> ConvNeXt:
@@ -91,19 +81,13 @@ class MultiModalConvNeXt(nn.Module):
         Returns:
             ConvNeXt模型实例（仅用于特征提取）
         """
-        # 创建完整的ConvNeXt模型（包含分类头）
-        # 这里使用num_classes=1000作为占位符，因为我们不会使用分类头
         extractor = ConvNeXt(
             in_chans=3,
-            num_classes=1000,  # 占位符，分类头不会被使用
+            num_classes=1000,
             depths=depths,
             dims=dims,
             drop_path_rate=drop_path_rate
         )
-        
-        # 移除分类头，仅保留特征提取部分
-        # ConvNeXt的forward_features方法会输出特征向量
-        # 我们不需要修改模型结构，只需要在forward中调用forward_features即可
         
         return extractor
 
@@ -127,26 +111,20 @@ class MultiModalConvNeXt(nn.Module):
         Raises:
             ValueError: 如果三个输入的形状不一致
         """
-        # 验证输入形状一致性
         if original.shape != wavelet.shape or original.shape != fourier.shape:
             raise ValueError(
                 f"Input shape mismatch: original={original.shape}, "
                 f"wavelet={wavelet.shape}, fourier={fourier.shape}"
             )
         
-        # 通过三个特征提取器分别提取特征
-        # 使用 forward_features 方法获取特征向量 [batch_size, feature_dim]
         feat_original = self.extractor_original.forward_features(original)
         feat_wavelet = self.extractor_wavelet.forward_features(wavelet)
         feat_fourier = self.extractor_fourier.forward_features(fourier)
         
-        # 将三个特征向量传入FusionModule进行融合
         fused_features = self.fusion_module(feat_original, feat_wavelet, feat_fourier)
         
-        # 将融合特征传入分类头
         logits = self.classifier(fused_features)
         
-        # 返回分类logits
         return logits
 
     def forward_multimodal_features(

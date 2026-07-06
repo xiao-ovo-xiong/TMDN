@@ -80,8 +80,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_classes', type=int, default=5)
     parser.add_argument('--batch-size', type=int, default=2)
 
-    # 数据集所在根目录
-    # http://download.tensorflow.org/example_images/flower_photos.tgz
     parser.add_argument('--data-path', type=str,
                         default="/data/flower_photos")
 
