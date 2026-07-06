@@ -138,11 +138,8 @@ python swin_transformer/predict.py --modality fourier
 
 | 参数 | 说明 |
 |---|---|
-| `--use-twin` | 启用 TMDN 双胞胎网络模式 |
-| `--use-multimodal` | 启用多域 ConvNeXt 单子网络模式 |
 | `--extra-train-dir` | 额外训练样本目录（仅追加至训练集，验证/测试集不变） |
 | `--weights` | 指定推理权重路径，默认 `./weights/best_model.pth` |
-| `--mode twin` | 推理时使用 TMDN 双胞胎模式 |
 | `--save-confusion-matrix` | 推理时保存混淆矩阵 |
 
 ---
